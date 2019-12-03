@@ -18,24 +18,27 @@ epochs = 1000
 evalEvery = 20
 global is_test
 is_test = False
+eps = 1e-9
 ################################## Deep kernel model
-def fully_nn_layer(x, input_dim, output_dim):
-    x = tf.reshape(x, [-1, input_dim])
-    fully1 = tf.layers.dense(inputs=x, units=output_dim, activation=tf.nn.leaky_relu)
-    return fully1
 
-def fully_nn_layer2(x, input_dim, output_dim):
+def fully_nn_layer(x, input_dim, output_dim):
     global is_test
     x = tf.reshape(x, [-1, input_dim])
     
-    fully1 = tf.layers.dense(inputs=x, units=500, activation=tf.nn.leaky_relu)
-    fully1 = tf.layers.dropout(fully1, rate=0.2, training=not is_test)
+    fully1 = tf.layers.dense(inputs=x, units=1000)
+    #fully1 = tf.contrib.layers.batch_norm(fully1, is_training= not is_test, decay=0.9, zero_debias_moving_mean=True)
+    fully1 = tf.nn.relu(fully1)
+    fully1 = tf.layers.dropout(fully1, rate=0.1, training=not is_test)
     
-    fully2 = tf.layers.dense(inputs=fully1, units=250, activation=tf.nn.leaky_relu)
-    fully2 = tf.layers.dropout(fully2, rate=0.2, training=not is_test)
+    fully2 = tf.layers.dense(inputs=fully1, units=500)
+    #fully2 = tf.contrib.layers.batch_norm(fully2, is_training= not is_test, decay=0.9, zero_debias_moving_mean=True)
+    fully2 = tf.nn.relu(fully2)
+    fully2 = tf.layers.dropout(fully2, rate=0.1, training=not is_test)
     
-    fully3 = tf.layers.dense(inputs=fully2, units=30, activation=tf.nn.leaky_relu)
-    fully3 = tf.layers.dropout(fully3, rate=0.2, training=not is_test)
+    fully3 = tf.layers.dense(inputs=fully2, units=50, activation=tf.nn.relu)
+    #fully3 = tf.contrib.layers.batch_norm(fully3, is_training= not is_test, decay=0.9, zero_debias_moving_mean=True)
+    fully3 = tf.nn.relu(fully3)
+    fully3 = tf.layers.dropout(fully3, rate=0.1, training=not is_test)
     
     fully4 = tf.layers.dense(inputs=fully3, units=output_dim, activation=None)
     
@@ -215,7 +218,28 @@ def SMKernel(Q, input_dim, active_dims=None, variances=None, frequencies=None,
     return Sum(kerns)
     
     
+class HeteroskedasticGaussian(gpflow.likelihoods.Likelihood):
+    def log_prob(self, F, Y):
+        # log_prob is used by the quadrature fallback of variational_expectations and predict_density.
+        # Because variational_expectations is implemented analytically below, this is not actually needed,
+        # but is included for pedagogical purposes.
+        # Note that currently relying on the quadrature would fail due to https://github.com/GPflow/GPflow/issues/966
+        Y, NoiseVar = Y[:, 0:1], Y[:, 1:2]
+        return gpflow.logdensities.gaussian(Y, F, NoiseVar)
 
+    def conditional_mean(self, F):
+        raise NotImplementedError
+
+    def conditional_variance(self, F):
+        raise NotImplementedError
+
+    def variational_expectations(self, Fmu, Fvar, Y):
+        Y, NoiseVar = Y[:, 0:1], Y[:, 1:2]
+        return -0.5 * np.log(2 * np.pi) - 0.5 * tf.math.log(NoiseVar) \
+               - 0.5 * (tf.math.square(Y - Fmu) + Fvar) / (NoiseVar + eps)
+
+    
+    
 ################################## Model variables ##################################
 is_training = tf.placeholder(tf.bool)
 p_dropout = tf.placeholder(tf.float32)

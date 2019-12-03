@@ -12,7 +12,7 @@ from Nosputin.companyDataset import *
 from data.extractor import *
 from data.ListSnP500 import *
 
-def snp500_filter(values, ticker, performances):
+def snp500_filter(values, ticker, performances, noises=None):
     """
     SnP500 in ListSnP500.py
     """
@@ -28,11 +28,16 @@ def snp500_filter(values, ticker, performances):
                 values.pop(i)
                 performances.pop(i)
                 ticker.pop(i)
+                if noises != None:
+                    noises.pop(i)
             is_hit = False    
         except IndexError:
             continue
     
     st.write("SNP500 filter:: {} companies total".format(len(values)))
+    if noises != None:
+        return values, ticker, performances, noises
+        
     return values, ticker, performances
 
 
@@ -78,7 +83,7 @@ def show_dist(dataset, sep_date=None):
     fig , ax = plt.subplots(figsize=(12,10), dpi=300)
     ax = plt.bar(length_count.keys(), length_count.values(), align='center', alpha=0.8, width=20)
     plt.style.use('ggplot')
-    plt.title("Dimensions of companies", fontsize=30)
+    plt.title("Number of reported fundamentals of companies", fontsize=30)
     plt.yticks(fontsize=16)
     plt.xticks(fontsize=16)
     plt.xlabel("Number of reported features", fontsize=20)
@@ -101,7 +106,6 @@ def show_plotly(x, y, text, name="", max_y=100, min_y=0):
                                           colorscale='Viridis',
                                           showscale=True),
                                    text=text))
-    
     scatter_fig.update_layout(title="Latent space view of {}".format(name),
                      margin=dict(l=0,r=0,b=0),
                      coloraxis=dict(cmin=0,cmax=100))
@@ -109,3 +113,15 @@ def show_plotly(x, y, text, name="", max_y=100, min_y=0):
     dist_fig = ff.create_distplot([y] ,[name])
     dist_fig.update_layout(margin=dict(l=0,r=0,b=0))
     st.plotly_chart(dist_fig)
+    
+
+def point_detail(trace, points, selector):
+    c = list(scatter.marker.color)
+    s = list(scatter.marker.size)
+    
+    for i in points.point_inds:
+        c[i] = '#bae2be'
+        s[i] = 20
+        with f.batch_update():
+            scatter.marker.color = c
+            scatter.marker.size = s

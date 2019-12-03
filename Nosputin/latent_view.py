@@ -14,11 +14,11 @@ from sklearn.decomposition import PCA, KernelPCA, SparsePCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import normalize
 
-
 def get_latent_value(values, method='kernelpca', normalization=True, widget_key=None):
     st.write("Dimensionality reduction for dim: <{}*{}>".format(len(values), len(values[0])))
     
-    values = normalize(values, norm='l2')
+    if normalization:
+        values = normalize(values, norm='l2')
     
     if method=='pca':
         pca = PCA(n_components=2,whiten=True)
