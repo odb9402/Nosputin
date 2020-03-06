@@ -10,7 +10,7 @@ import datetime
 from PIL import Image
 import pymongo
 import tensorflow as tf
-import gpflow
+#import gpflow
 import copy
 plt.style.use('ggplot')
 
@@ -19,9 +19,7 @@ from Nosputin.data_browser import data_browser
 from Nosputin.latent_view import latent_view
 from Nosputin.gpModel.buildNosputinModel import build_nosputin_model
 from Nosputin.gpModel.makeNosputinData import make_nosputin_data
-
-gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.5)
-sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def show_main():
@@ -59,11 +57,15 @@ def load_data_mongo():
 
     dataset = CompanyDataset()
     dataset.loadData_mongo(nosputin_db_client)
+    dataset.loadSnp500Price()
     return dataset
 
 #@st.cache(suppress_st_warning=True)
 def select_data_by_date(dataset, start_date, end_date):
     st.write("Select data by the date range")
+    dataset.startDatetime = start_date
+    dataset.endDatetime = end_date
+    
     prog = st.progress(0)
     i = 0
     for c in dataset.companies:
@@ -94,9 +96,6 @@ def main():
     elif app_mode == "Latent-View":
         dataset_selected = select_data_by_date(dataset_selected, str(start_date), str(end_date))
         latent_view(dataset_selected)
-    elif app_mode == "Make training set":
-        dataset_selected = select_data_by_date(dataset_selected, str(start_date), str(end_date))
-        make_nosputin_data(dataset_selected)
     elif app_mode == "Build model":
         #dataset_selected = select_data_by_date(dataset_selected, str(start_date), str(end_date))
         build_nosputin_model(dataset_selected)

@@ -35,7 +35,7 @@ class Company(object):
         sep_b = Company(self.ticker, self.prices.loc[self.prices.index >= sep_date], self.data.loc[self.data.index >= sep_date], self.industry)
         return sep_a, sep_b
     
-    def get_performance(self, sep_date=None):
+    def get_performance(self, sep_date=None, snp500=False):
         if sep_date != None:
             data = self.sep_data(sep_date)[1].data
         else:
@@ -57,6 +57,7 @@ class Company(object):
         #self.data = self.data.loc[start_date : end_date]
         self.data = self.data[(self.data.index >= start_date) & (end_date >= self.data.index)]
         self.prices = self.prices[(self.prices.index >= start_date) & (end_date >= self.prices.index)]
+
     def to_nparr(self):
         return self.data.dropna(how='any').values.reshape(-1)
     
@@ -82,8 +83,9 @@ class CompanyDataset:
         self.companies = []
         self.tickers = []
         self.timePeriods = []
-        
+        self.snp500Price = None
         self.startDatetime = None
+        self.sepDatetime = None
         self.endDatetime = None
     
     def loadData_mongo(self, db_client):
@@ -158,6 +160,11 @@ class CompanyDataset:
         
         self.numCompanies = len(self.companies)
         
+    def loadSnp500Price(self):
+        self.snp500Price = pd.read_csv("./data/SNP500_hist.csv", index_col=0)[['Close']]
+        self.snp500Price.index = pd.to_datetime(self.snp500Price.index)
+        self.snp500Price = self.snp500Price['Close']
+        
     def getCompany(self, ticker):
         for i in range(len(self.companies)):
             if self.tickers[i] == ticker:
@@ -176,12 +183,31 @@ class CompanyDataset:
                 else:
                     i = i + 1
     
+    def relative_performance(self, performance, sep_date=None):
+        """
+        Calculate relative performances.
+        """
+        if sep_date != None:
+            selected_snp500 = self.snp500Price[(self.snp500Price.index >= self.sepDatetime)
+                                           & (self.snp500Price.index < self.endDatetime)]
+        else:
+            selected_snp500 = self.snp500Price[(self.snp500Price.index >= self.startDatetime)
+                                           & (self.snp500Price.index < self.endDatetime)]
+        start = float(selected_snp500.iat[0])
+        end = float(selected_snp500.iat[-1])
+        performance_snp500 = (end - start)/start * 100
+        
+        return performance - performance_snp500
+        
+    
     def get_raw_value(self, sel_dim=None, sep_date=None, noise_call=False):
         raw_values = []
         tickers = []
         performances = []
         if noise_call:
             noises = []
+        if sep_date != None:
+            self.sepDatetime = sep_date
         
         st.write("Get raw value of companies . . .")
 
@@ -199,6 +225,7 @@ class CompanyDataset:
                     c_a = c
                     c_b = c
                 Y = c_b.get_performance(sep_date=sep_date)
+                Y = self.relative_performance(Y, sep_date=sep_date)
                 if noise_call:
                     N = c_a.get_uncertainty()
                 T = c_a.ticker

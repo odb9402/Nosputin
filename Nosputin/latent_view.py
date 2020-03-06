@@ -37,7 +37,7 @@ def get_latent_value(values, method='kernelpca', normalization=True, widget_key=
         n_it = st.slider("Max iteration", min_value=5000, max_value=50000, key='tsne_it_{}'.format(widget_key))
         perp = st.slider("Perplexity", min_value=30, max_value=300, key='tsne_prep{}'.format(widget_key))
         lr = st.slider("Learning rate", min_value=10, max_value=1000, key='tsne_lr{}'.format(widget_key))
-        tsne = TSNE(n_components=2, n_iter=n_it, perplexity=perp, learning_rate=lr)
+        tsne = TSNE(n_components=2, n_iter=n_it, perplexity=perp, learning_rate=lr, n_jobs=4)
         return np.transpose(tsne.fit_transform(values))
 
 
