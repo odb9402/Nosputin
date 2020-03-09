@@ -1,3 +1,4 @@
+# Nosputin
 Nosputin is an integrated tool to analyze stock market data for each company with its fundamental data such as revenues and net income. 
 
 ## Description
