@@ -8,7 +8,7 @@ Nosputin is an integrated tool to analyze stock market data for each company wit
 
 **The Data browser** model will show the fundamental information for the selected individual stock. You can select a stock using a ticker of the stock. 
 
-![databrowser](pic/databrowser.PNG)
+![databrowser](pic/databrowser.png)
 
 ### Latent-view
 
