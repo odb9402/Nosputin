@@ -24,6 +24,6 @@ If you select the dimension of data, **Nosputin** will show the scatter plot wit
 
 **Build model** will create the model that can predict the performance for each stock data using the machine learning-based implementation. This version uses several learning models to infer the performance from their fundamental data.
 
- Like **Latent-view**, the stock-prediction model only can predict the data that has the same dimensions because of the limitation of Gaussian process like any other machine learning-based technology. 
+ Like **Latent-view**, the stock-prediction model only can predict the data that has the same dimensions because of the limitation of machine learning algorithms that Nosputin uses. 
 
 ### Prediction
