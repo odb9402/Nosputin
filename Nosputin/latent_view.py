@@ -60,7 +60,7 @@ def latent_view(dataset):
     if snp_only:
         selected_values, selected_tickers, performance_values = snp500_filter(selected_values, selected_tickers, performance_values)
     
-    sel_method = st.selectbox("projection method",['tsne','kernelpca','pca','sparsepca'])
+    sel_method = st.selectbox("projection method",['pca','kernelpca','sparsepca','tsne'])
     st.write("We highly recommend to use t-sne in normal.")
     try:
         latent_values = get_latent_value(selected_values, method=sel_method, normalization=is_norm)

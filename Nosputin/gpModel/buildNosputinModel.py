@@ -37,7 +37,7 @@ class NosputinModelBuilder():
         self.noises_t = []
         
     def model_build(self):
-        self.model = BayesianNNNosputinModel(self.x, self.y, self.noises, self.x_t, self.y_t, self.noises_t) 
+        self.model = MassiveBayesianNNNosputinModel(self.x, self.y, self.noises, self.x_t, self.y_t, self.noises_t) 
     
     def load_data(self, sel_dim, sep_date, snp_only=False):
         self.x, self.ticker, self.y, self.noises = self.dataset.get_raw_value(sel_dim, sep_date, noise_call=True)
@@ -192,7 +192,7 @@ def build_nosputin_model(dataset):
 
         st.subheader("Prediction results projection")
 
-        sel_method = st.selectbox("projection method",['tsne','kernelpca','pca','sparsepca'])
+        sel_method = st.selectbox("projection method",['pca','kernelpca','sparsepca','tsne'])
 
         latent_values = get_latent_value(model_builder.x, method=sel_method, normalization=False, widget_key='1')
         latent_values_test = get_latent_value(model_builder.x_t, method=sel_method, normalization=False, widget_key='2')
